@@ -51,11 +51,10 @@ while {isClass (_cfgRoot >> ("Room" + str _roomIndex))} do {
         private _zs    = getArray (_cfgVariant >> "z");
         private _yaws  = getArray (_cfgVariant >> "yaw");
 
+        // Eden rotation of the house, the yaw of each item is added on top.
+        ([_house] call FUNC(vector2Eden)) params ["_xRot", "_yRot", "_zRot"];
+
         private _count = count _types;
-        private _housePos = getPosWorld _house;
-        private _houseDir = getDir _house;
-        private _cos = cos _houseDir;
-        private _sin = sin _houseDir;
 
         for "_i" from 0 to (_count - 1) do {
             private _type = _types select _i;
@@ -64,24 +63,35 @@ while {isClass (_cfgRoot >> ("Room" + str _roomIndex))} do {
             private _relZ = _zs select _i; // north
             private _yaw  = _yaws select _i;
 
-            // Stored offsets are direction-0 [east, up, north].
-            // Rotate the horizontal components by the live house direction.
-            private _worldX = _relX * _cos + _relZ * _sin;
-            private _worldY = -_relX * _sin + _relZ * _cos;
-
-            private _worldOffset = [_worldX, _worldY, _relY];
-            private _worldPos = _housePos vectorAdd _worldOffset;
+            // Stored offsets are direction-0 [east, up, north] with sea-level
+            // based heights (SQM config order). modelToWorldWorld expects
+            // [east, north, up] and returns a sea-level based (ASL) position,
+            // which matches both the extracted data and setPosASL.
+            // modelToWorld would return AGL (terrain/wave relative) - do not use.
+            private _itemPosASL = _house modelToWorldWorld [_relX, _relZ, _relY];
 
             if (is3DEN) then {
                 private _furniture = create3DENEntity ["Object", _type, [0, 0, 0], true];
-                _furniture set3DENAttribute ["rotation", [0, 0, _houseDir + _yaw]];
-                _furniture set3DENAttribute ["position", _worldPos];
+
+                // The Eden position attribute expects ATL.
+                _furniture set3DENAttribute ["position", ASLToATL _itemPosASL];
+                _furniture set3DENAttribute ["rotation", [_xRot, _yRot, _zRot + _yaw]];
                 _furniture set3DENAttribute ["enableSimulation", false];
                 _furniture set3DENAttribute ["objectIsSimple", true];
             } else {
                 private _furniture = [_type, [0, 0, 0]] call BIS_fnc_createSimpleObject;
-                _furniture setDir (_houseDir + _yaw);
-                _furniture setPosWorld _worldPos;
+                _furniture setPosASL _itemPosASL;
+                _furniture setVectorDirAndUp [vectorDir _house, vectorUp _house];
+
+                // Rotate the furniture around its own up axis by the yaw.
+                private _cos = cos _yaw;
+                private _sin = sin _yaw;
+                private _dir = vectorDir _furniture;
+                private _up = vectorUp _furniture;
+                private _newDir = (_dir vectorMultiply _cos) vectorAdd ((_dir vectorCrossProduct _up) vectorMultiply _sin);
+                _furniture setVectorDirAndUp [_newDir, _up];
+
+                { [_x, [[_furniture], true]] remoteExec ["addCuratorEditableObjects", 2] } forEach allCurators;
             };
         };
     };

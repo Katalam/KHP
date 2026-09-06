@@ -8,11 +8,3 @@ mainprefix = "z"
 workshop = [
     "450814997",
 ]
-
-parameters = [
-    "-skipIntro",
-    "-noSplash",
-    "-showScriptErrors",
-    "-debug",
-    "-filePatching",
-]
