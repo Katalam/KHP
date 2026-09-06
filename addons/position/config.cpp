@@ -2,7 +2,9 @@
     class CfgPatches {
         class ADDON {
             name = QUOTE(COMPONENT);
-            units[] = {};
+            units[] = {
+                "KHP_Module_FillHouse"
+            };
             weapons[] = {};
             requiredVersion = REQUIRED_VERSION;
             requiredAddons[] = {

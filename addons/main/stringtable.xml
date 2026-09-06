@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<Project name="KNB">
+<Project name="KHP">
     <Package name="main">
-        <Key ID="STR_KNB_main_author">
+        <Key ID="STR_KHP_main_author">
             <English>Katalam</English>
             <German>Katalam</German>
         </Key>

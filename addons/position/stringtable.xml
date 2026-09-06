@@ -1,5 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project name="KHP">
     <Package name="position">
+        <Key ID="STR_KHP_position_moduleFillHouse_description">
+            <English>Spawns furniture inside the building under the cursor (or the nearest building within 25 m), based on CfgHouseData. The module deletes itself after execution.</English>
+            <German>Erzeugt Möbel im Gebäude unter dem Mauszeiger (oder im nächsten Gebäude innerhalb von 25 m), basierend auf CfgHouseData. Das Modul löscht sich nach Ausführung selbst.</German>
+        </Key>
+        <Key ID="STR_KHP_position_moduleFillHouse_displayName">
+            <English>Fill House with Furniture</English>
+            <German>Haus mit Möbeln ausstatten</German>
+        </Key>
     </Package>
 </Project>

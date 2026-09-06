@@ -72,7 +72,11 @@ while {isClass (_cfgRoot >> ("Room" + str _roomIndex))} do {
             private _worldOffset = [_worldX, _worldY, _relY];
             private _worldPos = _housePos vectorAdd _worldOffset;
 
-            private _furniture = [_type, [0, 0, 0]] call BIS_fnc_createSimpleObject;
+            private _furniture = if (is3DEN) then {
+                create3DENEntity ["Object", _type, [0, 0, 0], true]
+            } else {
+                [_type, [0, 0, 0]] call BIS_fnc_createSimpleObject
+            };
             _furniture setDir (_houseDir + _yaw);
             _furniture setPosWorld _worldPos;
         };
