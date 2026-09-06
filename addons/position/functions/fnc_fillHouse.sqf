@@ -5,7 +5,10 @@
  * For every room a random variant is chosen and its furniture is created
  * relative to the house position and direction.
  * Offsets in CfgHouseData are plain SQM-order [x,z,y] values saved as
- * [east, up, north] relative to a direction-0 reference house.
+ * [east, up, north] relative to a direction-0 reference house. The stored
+ * positions aim at each object's bounding center (the reference furniture
+ * was placed center-based), so the rotated boundingCenter offset is
+ * subtracted to place the model origin correctly.
  *
  * Arguments:
  * 0: House <OBJECT>
@@ -70,26 +73,43 @@ while {isClass (_cfgRoot >> ("Room" + str _roomIndex))} do {
             // modelToWorld would return AGL (terrain/wave relative) - do not use.
             private _itemPosASL = _house modelToWorldWorld [_relX, _relZ, _relY];
 
+            // Final orientation: the house orientation rotated around its
+            // own up axis by the yaw.
+            private _up = vectorUp _house;
+            private _cos = cos _yaw;
+            private _sin = sin _yaw;
+            private _dir = vectorDir _house;
+            private _newDir = (_dir vectorMultiply _cos) vectorAdd ((_dir vectorCrossProduct _up) vectorMultiply _sin);
+
             if (is3DEN) then {
                 private _furniture = create3DENEntity ["Object", _type, [0, 0, 0], true];
 
+                // Stored positions aim at the object's bounding center, not
+                // its model origin - subtract the rotated center offset.
+                private _center = boundingCenter _furniture;
+                private _aside = _newDir vectorCrossProduct _up;
+                private _centerOffset = (_aside vectorMultiply (_center select 0))
+                    vectorAdd (_newDir vectorMultiply (_center select 1))
+                    vectorAdd (_up vectorMultiply (_center select 2));
+
                 // The Eden position attribute expects ATL.
-                _furniture set3DENAttribute ["position", ASLToATL _itemPosASL];
+                _furniture set3DENAttribute ["position", ASLToATL (_itemPosASL vectorDiff _centerOffset)];
                 _furniture set3DENAttribute ["rotation", [_xRot, _yRot, _zRot + _yaw]];
                 _furniture set3DENAttribute ["enableSimulation", false];
                 _furniture set3DENAttribute ["objectIsSimple", true];
             } else {
                 private _furniture = [_type, [0, 0, 0]] call BIS_fnc_createSimpleObject;
-                _furniture setPosASL _itemPosASL;
-                _furniture setVectorDirAndUp [vectorDir _house, vectorUp _house];
 
-                // Rotate the furniture around its own up axis by the yaw.
-                private _cos = cos _yaw;
-                private _sin = sin _yaw;
-                private _dir = vectorDir _furniture;
-                private _up = vectorUp _furniture;
-                private _newDir = (_dir vectorMultiply _cos) vectorAdd ((_dir vectorCrossProduct _up) vectorMultiply _sin);
+                // Stored positions aim at the object's bounding center, not
+                // its model origin - subtract the rotated center offset.
+                private _center = boundingCenter _furniture;
+                private _aside = _newDir vectorCrossProduct _up;
+                private _centerOffset = (_aside vectorMultiply (_center select 0))
+                    vectorAdd (_newDir vectorMultiply (_center select 1))
+                    vectorAdd (_up vectorMultiply (_center select 2));
+
                 _furniture setVectorDirAndUp [_newDir, _up];
+                _furniture setPosASL (_itemPosASL vectorDiff _centerOffset);
 
                 { [_x, [[_furniture], true]] remoteExec ["addCuratorEditableObjects", 2] } forEach allCurators;
             };
