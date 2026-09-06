@@ -27,7 +27,7 @@ if (isNull _house) exitWith {};
 if (_house getVariable [QGVAR(furnitureFilled), false]) exitWith {};
 
 private _buildingType = typeOf _house;
-private _cfgRoot = missionConfigFile >> "CfgHouseData" >> _buildingType;
+private _cfgRoot = configFile >> "CfgHouseData" >> _buildingType;
 
 if !(isClass _cfgRoot) exitWith {};
 
@@ -72,13 +72,17 @@ while {isClass (_cfgRoot >> ("Room" + str _roomIndex))} do {
             private _worldOffset = [_worldX, _worldY, _relY];
             private _worldPos = _housePos vectorAdd _worldOffset;
 
-            private _furniture = if (is3DEN) then {
-                create3DENEntity ["Object", _type, [0, 0, 0], true]
+            if (is3DEN) then {
+                private _furniture = create3DENEntity ["Object", _type, [0, 0, 0], true];
+                _furniture set3DENAttribute ["rotation", [0, 0, _houseDir + _yaw]];
+                _furniture set3DENAttribute ["position", _worldPos];
+                _furniture set3DENAttribute ["enableSimulation", false];
+                _furniture set3DENAttribute ["objectIsSimple", true];
             } else {
-                [_type, [0, 0, 0]] call BIS_fnc_createSimpleObject
+                private _furniture = [_type, [0, 0, 0]] call BIS_fnc_createSimpleObject;
+                _furniture setDir (_houseDir + _yaw);
+                _furniture setPosWorld _worldPos;
             };
-            _furniture setDir (_houseDir + _yaw);
-            _furniture setPosWorld _worldPos;
         };
     };
 

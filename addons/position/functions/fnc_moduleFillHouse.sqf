@@ -68,8 +68,7 @@ switch _mode do {
                 _house call FUNC(fillHouse);
             };
         } else {
-            // Simple objects are local only - run the fill on every machine.
-            [_house] remoteExec [FUNC(fillHouse), 0];
+            _house call FUNC(fillHouse);
         };
     };
 };
